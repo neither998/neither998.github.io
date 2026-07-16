@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yamaha R6 避震調整工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0c0c1d 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #00d4ff, #0084ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(0, 212, 255, 0.3);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #8892b0;
+            font-size: 1em;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .front .card-title { color: #00d4ff; }
+        .rear .card-title { color: #ff6b6b; }
+        .env .card-title { color: #ffd93d; }
+
+        .icon { font-size: 1.3em; }
+
+        .btn-container {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .btn-save {
+            flex: 2;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #28a745, #218838);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-save:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-save:active {
+            transform: scale(0.98);
+        }
+
+        .btn-unlock {
+            flex: 1;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #ffc107, #e0a800);
+            color: #333;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+            display: none;
+        }
+
+        .btn-unlock:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+        }
+
+        .btn-unlock:active {
+            transform: scale(0.98);
+        }
+
+        .btn-unlock.active {
+            display: block;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-size: 0.9em;
+            color: #8892b0;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 12px;
+            font-size: 24px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-decrease {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+            border: 2px solid rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-decrease:hover:not(:disabled) {
+            background: rgba(255, 107, 107, 0.3);
+            transform: scale(1.05);
+        }
+
+        .btn-decrease:active:not(:disabled) { transform: scale(0.95); }
+
+        .btn-increase {
+            background: rgba(0, 212, 255, 0.2);
+            color: #00d4ff;
+            border: 2px solid rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-increase:hover:not(:disabled) {
+            background: rgba(0, 212, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .btn-increase:active:not(:disabled) { transform: scale(0.95); }
+
+        .input-group input {
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 12px 15px;
+            color: #ffffff;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            outline: none;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .input-group input:focus {
+            border-color: #00d4ff;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+
+        .input-group input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .input-group input::placeholder { color: #555; }
+
+        .result-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 212, 255, 0.1);
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 12px;
+            padding: 12px 15px;
+            min-height: 50px;
+        }
+
+        .result-group.rear {
+            background: rgba(255, 107, 107, 0.1);
+            border-color: rgba(255, 107, 107, 0.3);
+        }
+
+        .result-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .result-label {
+            font-size: 0.75em;
+            color: #8892b0;
+            margin-top: 4px;
+        }
+
+        .result-value.locked {
+            color: #ffd93d;
+            text-shadow: 0 0 10px rgba(255, 217, 61, 0.5);
+        }
+
+        .compensation {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .compensation .input-group input { flex: 1; }
+
+        .final-section {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(255, 107, 107, 0.15));
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 20px;
+            padding: 25px;
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .final-title {
+            font-size: 1.5em;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #00d4ff, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .final-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .final-item {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .final-label {
+            font-size: 0.9em;
+            color: #8892b0;
+            margin-bottom: 8px;
+        }
+
+        .final-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #00d4ff;
+        }
+
+        .final-value.rear { color: #ff6b6b; }
+
+        .final-value.locked {
+            color: #ffd93d;
+            text-shadow: 0 0 10px rgba(255, 217, 61, 0.5);
+        }
+
+        .lock-indicator {
+            text-align: center;
+            color: #ffd93d;
+            font-size: 0.9em;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .lock-indicator.active { display: block; }
+
+        /* 紀錄區塊 */
+        #log-section {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .log-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #8892b0;
+            margin-bottom: 15px;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-clear-log {
+            background: rgba(255, 107, 107, 0.2);
+            border: 1px solid rgba(255, 107, 107, 0.4);
+            color: #ff6b6b;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.7em;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-clear-log:hover {
+            background: rgba(255, 107, 107, 0.3);
+        }
+
+        #log-content {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #aaa;
+            max-height: 400px;
+            overflow-y: auto;
+            line-height: 1.8;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .log-entry {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 10px 0;
+        }
+
+        .log-time {
+            color: #ffd93d;
+            font-weight: bold;
+        }
+
+        .log-value {
+            color: #00d4ff;
+        }
+
+        .log-label {
+            color: #8892b0;
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 2em; }
+            .grid { grid-template-columns: 1fr; }
+            .final-grid { grid-template-columns: 1fr; }
+            .card { padding: 20px; }
+            .btn { width: 60px; height: 60px; font-size: 28px; }
+            .btn-save { font-size: 1.1em; }
+            .btn-container {
+                flex-direction: column;
+            }
+            .btn-save { flex: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏍️ Yamaha R6 避震調整工具</h1>
+        <p class="subtitle">專業懸吊設定輔助計算器</p>
+
+        <!-- 生效/解鎖按鈕 -->
+        <div class="btn-container">
+            <button class="btn-save" onclick="saveSettings()">💾 生效並紀錄</button>
+            <button class="btn-unlock" id="unlockBtn" onclick="unlockSettings()">🔓 解鎖</button>
+        </div>
+        <div class="lock-indicator" id="lockIndicator">
+            🔒 設定已生效！調整值已歸零，顯示值已鎖定
+        </div>
+
+        <!-- 前置避震 -->
+        <div class="card front">
+            <div class="card-title">
+                <span class="icon">🔧</span>
+                前置避震參數 (Front)
+            </div>
+            <div class="grid">
+                <div class="input-group">
+                    <label>Fc - 預載調整 (Preload)</label>
+                    <div class="input-row">
+                        <button class="btn btn-decrease" id="FcDec" onclick="adjustValue('Fc', -1)">−</button>
+                        <input type="number" id="Fc" value="0" step="1" onchange="calculate()" oninput="calculate()">
+                        <button class="btn btn-increase" id="FcInc" onclick="adjustValue('Fc', 1)">+</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Fr - 低壓阻尼 (Low Comp)</label>
+                    <div class="input-row">
+                        <button class="btn btn-decrease" id="FrDec" onclick="adjustValue('Fr', -1)">−</button>
+                        <input type="number" id="Fr" value="0" step="1" onchange="calculate()" oninput="calculate()">
+                        <button class="btn btn-increase" id="FrInc" onclick="adjustValue('Fr', 1)">+</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Fp - 預載 (Preload)</label>
+                    <div class="input-row">
+                        <button class="btn btn-decrease" id="FpDec" onclick="adjustValue('Fp', -0.25)">−</button>
+                        <input type="number" id="Fp" value="0" step="0.25" onchange="calculate()" oninput="calculate()">
+                        <button class="btn btn-increase" id="FpInc" onclick="adjustValue('Fp', 0.25)">+</button>
+                    </div>
+                </div>
+            </div>
+            <div class="grid" style="margin-top: 20px;">
+                <div class="result-group">
+                    <div class="result-value" id="FcDisplay">14.00</div>
+                    <div class="result-label">Fc 顯示值 (14 - Fc)</div>
+                </div>
+                <div class="result-group">
+                    <div class="result-value" id="FrDisplay">12.00</div>
+                    <div class="result-label">Fr 顯示值 (12 - Fr)</div>
+                </div>
+                <div class="result-group">
+                    <div class="result-value" id="FpDisplay">6.75</div>
+                    <div class="result-label">Fp 顯示值 (6.75 + Fp)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 後避震 -->
+        <div class="card rear">
+            <div class="card-title">
+                <span class="icon">🔩</span>
+                後避震參數 (Rear)
+            </div>
+            <div class="grid">
+                <div class="input-group">
+                    <label>Rc - 預載調整 (Preload)</label>
+                    <div class="input-row">
+                        <button class="btn btn-decrease" id="RcDec" onclick="adjustValue('Rc', -1)">−</button>
+                        <input type="number" id="Rc" value="0" step="1" onchange="calculate()" oninput="calculate()">
+                        <button class="btn btn-increase" id="RcInc" onclick="adjustValue('Rc', 1)">+</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Rr - 低壓阻尼 (Low Comp)</label>
+                    <div class="input-row">
+                        <button class="btn btn-decrease" id="RrDec" onclick="adjustValue('Rr', -1)">−</button>
+                        <input type="number" id="Rr" value="0" step="1" onchange="calculate()" oninput="calculate()">
+                        <button class="btn btn-increase" id="RrInc" onclick="adjustValue('Rr', 1)">+</button>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Rp - 預載 (Preload)</label>
+                    <div class="input-row">
+                        <button class="btn btn-decrease" id="RpDec" onclick="adjustValue('Rp', -0.25)">−</button>
+                        <input type="number" id="Rp" value="0" step="0.25" onchange="calculate()" oninput="calculate()">
+                        <button class="btn btn-increase" id="RpInc" onclick="adjustValue('Rp', 0.25)">+</button>
+                    </div>
+                </div>
+            </div>
+            <div class="grid" style="margin-top: 20px;">
+                <div class="result-group rear">
+                    <div class="result-value" id="RcDisplay">15.00</div>
+                    <div class="result-label">Rc 顯示值 (15 - Rc)</div>
+                </div>
+                <div class="result-group rear">
+                    <div class="result-value" id="RrDisplay">16.00</div>
+                    <div class="result-label">Rr 顯示值 (16 - Rr)</div>
+                </div>
+                <div class="result-group rear">
+                    <div class="result-value" id="RpDisplay">15.00</div>
+                    <div class="result-label">Rp 顯示值 (15 + Rp)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 環境因素 -->
+        <div class="card env">
+            <div class="card-title">
+                <span class="icon">🌡️</span>
+                環境因素 (Environment)
+            </div>
+            <div class="grid">
+                <div class="input-group">
+                    <label>氣溫 (°C)</label>
+                    <input type="number" id="temp" value="28" step="0.1" onchange="calculate()" oninput="calculate()">
+                </div>
+                <div class="input-group">
+                    <label>油量 (L)</label>
+                    <input type="number" id="fuel" value="0" step="0.1" onchange="calculate()" oninput="calculate()">
+                </div>
+            </div>
+            <div class="compensation">
+                <div class="input-group">
+                    <label>氣溫補償值</label>
+                    <input type="number" id="tempComp" value="0" step="0.01" onchange="calculate()" oninput="calculate()">
+                </div>
+                <div class="input-group">
+                    <label>油量補償值</label>
+                    <input type="number" id="fuelComp" value="0" step="0.01" onchange="calculate()" oninput="calculate()">
+                </div>
+            </div>
+        </div>
+
+        <!-- 最終結果 -->
+        <div class="final-section">
+            <div class="final-title">📊 最終調整值 (Final Values)</div>
+            <div class="final-grid">
+                <div class="final-item">
+                    <div class="final-label">Fc 最終</div>
+                    <div class="final-value" id="FcFinal">14.00</div>
+                </div>
+                <div class="final-item">
+                    <div class="final-label">Fr 最終</div>
+                    <div class="final-value" id="FrFinal">12.00</div>
+                </div>
+                <div class="final-item">
+                    <div class="final-label">Fp 最終</div>
+                    <div class="final-value" id="FpFinal">6.75</div>
+                </div>
+                <div class="final-item">
+                    <div class="final-label">Rc 最終</div>
+                    <div class="final-value rear" id="RcFinal">15.00</div>
+                </div>
+                <div class="final-item">
+                    <div class="final-label">Rr 最終</div>
+                    <div class="final-value rear" id="RrFinal">16.00</div>
+                </div>
+                <div class="final-item">
+                    <div class="final-label">Rp 最終</div>
+                    <div class="final-value rear" id="RpFinal">15.00</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 紀錄區 -->
+        <div id="log-section">
+            <div class="log-title">
+                <span>📋 設定紀錄</span>
+                <button class="btn-clear-log" onclick="clearLogs()">🗑️ 清除紀錄</button>
+            </div>
+            <div id="log-content">
+                <div style="text-align: center; color: #666; padding: 20px;">
+                    尚未有任何設定紀錄...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 鎖定狀態
+        let isLocked = false;
+
+        // 儲存所有輸入欄位 ID
+        const inputIds = ['Fc', 'Fr', 'Fp', 'Rc', 'Rr', 'Rp', 'temp', 'fuel', 'tempComp', 'fuelComp'];
+
+        // 儲存狀態到 localStorage
+        function saveState() {
+            const state = {
+                isLocked: isLocked,
+                inputs: {},
+                logs: document.getElementById('log-content').innerHTML
+            };
+
+            inputIds.forEach(id => {
+                state.inputs[id] = document.getElementById(id).value;
+            });
+
+            localStorage.setItem('r6_suspension_state', JSON.stringify(state));
+        }
+
+        // 從 localStorage 載入狀態
+        function loadState() {
+            const saved = localStorage.getItem('r6_suspension_state');
+            if (saved) {
+                try {
+                    const state = JSON.parse(saved);
+
+                    // 載入所有輸入值
+                    inputIds.forEach(id => {
+                        if (state.inputs && state.inputs[id] !== undefined) {
+                            document.getElementById(id).value = state.inputs[id];
+                        }
+                    });
+
+                    // 載入紀錄
+                    if (state.logs) {
+                        document.getElementById('log-content').innerHTML = state.logs;
+                    }
+
+                    // 如果之前是鎖定狀態，恢復鎖定（先計算再鎖定）
+                    if (state.isLocked) {
+                        calculate(); // 先計算顯示值 (isLocked 仍是 false)
+                        isLocked = true;  // 再設定鎖定
+                        applyLock();      // 禁用按鈕
+                    } else {
+                        calculate();
+                    }
+                } catch (e) {
+                    console.error('載入狀態失敗:', e);
+                    calculate();
+                }
+            } else {
+                calculate();
+            }
+        }
+
+        function adjustValue(id, step) {
+            if (isLocked) return;
+            const input = document.getElementById(id);
+            let currentValue = parseFloat(input.value) || 0;
+            currentValue += step;
+            input.value = currentValue.toFixed(step < 1 ? 2 : 0);
+            calculate();
+        }
+
+        function applyLock() {
+            // 禁用所有輸入和按鈕
+            inputIds.forEach(id => {
+                document.getElementById(id).disabled = true;
+            });
+
+            const buttons = document.querySelectorAll('.btn-decrease, .btn-increase');
+            buttons.forEach(btn => btn.disabled = true);
+
+            // 顯示鎖定指示器
+            document.getElementById('lockIndicator').classList.add('active');
+            
+            // 顯示解鎖按鈕
+            document.getElementById('unlockBtn').classList.add('active');
+
+            // 給顯示值和最終值加上 locked class
+            const displayIds = ['FcDisplay', 'FrDisplay', 'FpDisplay', 'RcDisplay', 'RrDisplay', 'RpDisplay'];
+            const finalIds = ['FcFinal', 'FrFinal', 'FpFinal', 'RcFinal', 'RrFinal', 'RpFinal'];
+
+            displayIds.forEach(id => document.getElementById(id).classList.add('locked'));
+            finalIds.forEach(id => document.getElementById(id).classList.add('locked'));
+        }
+
+        function unlockSettings() {
+            isLocked = false;
+            
+            // 解除所有禁用
+            inputIds.forEach(id => {
+                document.getElementById(id).disabled = false;
+            });
+
+            const buttons = document.querySelectorAll('.btn-decrease, .btn-increase');
+            buttons.forEach(btn => btn.disabled = false);
+            
+            // 隱藏鎖定指示器
+            document.getElementById('lockIndicator').classList.remove('active');
+            
+            // 隱藏解鎖按鈕
+            document.getElementById('unlockBtn').classList.remove('active');
+            
+            // 移除 locked class
+            const displayIds = ['FcDisplay', 'FrDisplay', 'FpDisplay', 'RcDisplay', 'RrDisplay', 'RpDisplay'];
+            const finalIds = ['FcFinal', 'FrFinal', 'FpFinal', 'RcFinal', 'RrFinal', 'RpFinal'];
+
+            displayIds.forEach(id => document.getElementById(id).classList.remove('locked'));
+            finalIds.forEach(id => document.getElementById(id).classList.remove('locked'));
+            
+            // 重新計算（保持現有數值）
+            calculate();
+            
+            // 儲存狀態
+            saveState();
+        }
+
+        function saveSettings() {
+            isLocked = true;
+
+            // 獲取當前顯示值
+            const FcDisplay = 14 - parseFloat(document.getElementById('Fc').value) || 0;
+            const FrDisplay = 12 - parseFloat(document.getElementById('Fr').value) || 0;
+            const FpDisplay = 6.75 + parseFloat(document.getElementById('Fp').value) || 0;
+            const RcDisplay = 15 - parseFloat(document.getElementById('Rc').value) || 0;
+            const RrDisplay = 16 - parseFloat(document.getElementById('Rr').value) || 0;
+            const RpDisplay = 15 + parseFloat(document.getElementById('Rp').value) || 0;
+
+            const temp = parseFloat(document.getElementById('temp').value) || 28;
+            const fuel = parseFloat(document.getElementById('fuel').value) || 0;
+            const tempComp = parseFloat(document.getElementById('tempComp').value) || 0;
+            const fuelComp = parseFloat(document.getElementById('fuelComp').value) || 0;
+
+            // 更新顯示值為鎖定狀態
+            document.getElementById('FcDisplay').textContent = FcDisplay.toFixed(2);
+            document.getElementById('FrDisplay').textContent = FrDisplay.toFixed(2);
+            document.getElementById('FpDisplay').textContent = FpDisplay.toFixed(2);
+            document.getElementById('RcDisplay').textContent = RcDisplay.toFixed(2);
+            document.getElementById('RrDisplay').textContent = RrDisplay.toFixed(2);
+            document.getElementById('RpDisplay').textContent = RpDisplay.toFixed(2);
+
+            // 計算最終值
+            const FcFinal = FcDisplay + tempComp + fuelComp;
+            const FrFinal = FrDisplay + tempComp + fuelComp;
+            const FpFinal = FpDisplay + tempComp + fuelComp;
+            const RcFinal = RcDisplay + tempComp + fuelComp;
+            const RrFinal = RrDisplay + tempComp + fuelComp;
+            const RpFinal = RpDisplay + tempComp + fuelComp;
+
+            document.getElementById('FcFinal').textContent = FcFinal.toFixed(2);
+            document.getElementById('FrFinal').textContent = FrFinal.toFixed(2);
+            document.getElementById('FpFinal').textContent = FpFinal.toFixed(2);
+            document.getElementById('RcFinal').textContent = RcFinal.toFixed(2);
+            document.getElementById('RrFinal').textContent = RrFinal.toFixed(2);
+            document.getElementById('RpFinal').textContent = RpFinal.toFixed(2);
+
+            // 套用鎖定狀態
+            applyLock();
+
+            // 生成紀錄
+            const now = new Date();
+            const timeStr = now.toLocaleString('zh-TW');
+
+            const logEntry = `
+                <div class="log-entry">
+                    <div><span class="log-time">[${timeStr}]</span> <span class="log-label">設定已生效！</span></div>
+                    <div>
+                        <span class="log-label">Fc:</span> <span class="log-value">${FcDisplay.toFixed(2)}</span> |
+                        <span class="log-label">Fr:</span> <span class="log-value">${FrDisplay.toFixed(2)}</span> |
+                        <span class="log-label">Fp:</span> <span class="log-value">${FpDisplay.toFixed(2)}</span>
+                    </div>
+                    <div>
+                        <span class="log-label">Rc:</span> <span class="log-value">${RcDisplay.toFixed(2)}</span> |
+                        <span class="log-label">Rr:</span> <span class="log-value">${RrDisplay.toFixed(2)}</span> |
+                        <span class="log-label">Rp:</span> <span class="log-value">${RpDisplay.toFixed(2)}</span>
+                    </div>
+                    <div>
+                        <span class="log-label">環境:</span> 氣溫 ${temp}°C, 油量 ${fuel}L
+                    </div>
+                </div>
+            `;
+
+            const logContent = document.getElementById('log-content');
+            logContent.innerHTML = logEntry + logContent.innerHTML;
+
+            // 儲存狀態到 localStorage
+            saveState();
+        }
+
+        function clearLogs() {
+            if (confirm('確定要清除所有紀錄嗎？')) {
+                document.getElementById('log-content').innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">尚未有任何設定紀錄...</div>';
+                saveState();
+            }
+        }
+
+        function calculate() {
+            if (isLocked) return;
+
+            const Fc = parseFloat(document.getElementById('Fc').value) || 0;
+            const Fr = parseFloat(document.getElementById('Fr').value) || 0;
+            const Fp = parseFloat(document.getElementById('Fp').value) || 0;
+            const Rc = parseFloat(document.getElementById('Rc').value) || 0;
+            const Rr = parseFloat(document.getElementById('Rr').value) || 0;
+            const Rp = parseFloat(document.getElementById('Rp').value) || 0;
+
+            const tempComp = parseFloat(document.getElementById('tempComp').value) || 0;
+            const fuelComp = parseFloat(document.getElementById('fuelComp').value) || 0;
+
+            const FcDisplay = 14 - Fc;
+            const FrDisplay = 12 - Fr;
+            const FpDisplay = 6.75 + Fp;
+            const RcDisplay = 15 - Rc;
+            const RrDisplay = 16 - Rr;
+            const RpDisplay = 15 + Rp;
+
+            document.getElementById('FcDisplay').textContent = FcDisplay.toFixed(2);
+            document.getElementById('FrDisplay').textContent = FrDisplay.toFixed(2);
+            document.getElementById('FpDisplay').textContent = FpDisplay.toFixed(2);
+            document.getElementById('RcDisplay').textContent = RcDisplay.toFixed(2);
+            document.getElementById('RrDisplay').textContent = RrDisplay.toFixed(2);
+            document.getElementById('RpDisplay').textContent = RpDisplay.toFixed(2);
+
+            const FcFinal = FcDisplay + tempComp + fuelComp;
+            const FrFinal = FrDisplay + tempComp + fuelComp;
+            const FpFinal = FpDisplay + tempComp + fuelComp;
+            const RcFinal = RcDisplay + tempComp + fuelComp;
+            const RrFinal = RrDisplay + tempComp + fuelComp;
+            const RpFinal = RpDisplay + tempComp + fuelComp;
+
+            document.getElementById('FcFinal').textContent = FcFinal.toFixed(2);
+            document.getElementById('FrFinal').textContent = FrFinal.toFixed(2);
+            document.getElementById('FpFinal').textContent = FpFinal.toFixed(2);
+            document.getElementById('RcFinal').textContent = RcFinal.toFixed(2);
+            document.getElementById('RrFinal').textContent = RrFinal.toFixed(2);
+            document.getElementById('RpFinal').textContent = RpFinal.toFixed(2);
+        }
+
+        // 頁面載入時自動載入上次狀態
+        loadState();
+    </script>
+</body>
+</html>

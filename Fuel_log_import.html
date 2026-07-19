@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>加油記錄</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0a0e17;
+            color: #e0e0e0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        h1 {
+            text-align: center;
+            color: #00d4ff;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+        .input-section {
+            background: #1a1f2e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #2a3040;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+        .input-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .input-group {
+            flex: 1;
+            min-width: 120px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: #8899aa;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 10px 14px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-group input:focus,
+        .input-group select:focus {
+            border-color: #00d4ff;
+            box-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
+        }
+        .input-group select option {
+            background: #0d1117;
+            color: #e0e0e0;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        #confirmBtn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #confirmBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+        }
+        .table-section {
+            background: #1a1f2e;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #2a3040;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            margin-bottom: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        thead th {
+            background: #0d1117;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #00d4ff;
+            font-size: 0.9rem;
+            border-bottom: 2px solid #00d4ff33;
+        }
+        tbody tr {
+            border-bottom: 1px solid #2a3040;
+            transition: background 0.2s;
+        }
+        tbody tr:hover {
+            background: #162030;
+        }
+        tbody td {
+            padding: 10px 16px;
+            font-size: 0.95rem;
+        }
+        .car-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .car-F22 { background: #1a3a2a; color: #4ade80; border: 1px solid #4ade8044; }
+        .car-R6 { background: #3a1a1a; color: #f87171; border: 1px solid #f8717144; }
+        .car-GSXR { background: #2a2a3a; color: #a78bfa; border: 1px solid #a78bfa44; }
+        .diff-pos { color: #4ade80; font-weight: bold; }
+        .diff-zero { color: #8899aa; }
+.diff-neg { color: #f87171; font-weight: bold; }
+        .empty-msg {
+            text-align: center;
+            padding: 30px;
+            color: #555;
+            font-style: italic;
+        }
+        #rowCount {
+            text-align: right;
+            padding: 10px 16px;
+            font-size: 0.8rem;
+            color: #555;
+        }
+        .btn-del {
+            background: none;
+            border: 1px solid #30363d;
+            color: #888;
+            padding: 2px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .btn-del:hover {
+            color: #f87171;
+            border-color: #f87171;
+        }
+        .footer-section {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 15px 0;
+            flex-wrap: wrap;
+        }
+        #resetBtn, #recalcBtn, #exportBtn, #importBtn {
+            padding: 10px 30px;
+            border: 1px solid;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #resetBtn {
+            background: #2a2020;
+            color: #f87171;
+            border-color: #4a2020;
+        }
+        #resetBtn:hover {
+            background: #3a2525;
+            border-color: #f87171;
+        }
+        #recalcBtn {
+            background: #1a2a3a;
+            color: #00d4ff;
+            border-color: #2a4a5a;
+        }
+        #recalcBtn:hover {
+            background: #2a3a4a;
+            border-color: #00d4ff;
+        }
+        #exportBtn {
+            background: #2a3a2a;
+            color: #4ade80;
+            border-color: #4a5a4a;
+        }
+        #exportBtn:hover {
+            background: #3a4a3a;
+            border-color: #4ade80;
+        }
+        #importBtn {
+            background: #3a2a1a;
+            color: #ffb74d;
+            border-color: #5a4a3a;
+        }
+        #importBtn:hover {
+            background: #4a3a2a;
+            border-color: #ffb74d;
+        }
+    </style>
+</head>
+<body>
+
+<h1>⛽ 加油記錄</h1>
+
+<div class="input-section">
+    <div class="input-row">
+        <div class="input-group">
+            <label>車種</label>
+            <select id="carType">
+                <option value="">請選擇</option>
+                <option value="F22">F22</option>
+                <option value="R6">R6</option>
+                <option value="GSXR">GSXR</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label>里程 (km)</label>
+            <input type="number" id="mileage" placeholder="例如: 12500">
+        </div>
+        <div class="input-group">
+            <label>加油量 (L)</label>
+            <input type="number" id="fuel" placeholder="例如: 15.5" step="0.1">
+        </div>
+        <div class="btn-group">
+            <button id="confirmBtn" onclick="addRow()">✓ 確認</button>
+        </div>
+    </div>
+</div>
+
+<div class="table-section">
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>時間</th>
+                <th>車種</th>
+                <th>里程 (km)</th>
+                <th>里程差 (km)</th>
+                <th>加油量 (L)</th>
+                <th>每 L 里程</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <!-- Data rows will be here -->
+        </tbody>
+    </table>
+    <div id="rowCount"></div>
+</div>
+
+<div class="footer-section">
+    <button id="importBtn" onclick="document.getElementById('fileInput').click()">📤 匯入</button>
+    <button id="recalcBtn" onclick="recalcDiff()">🔄 重新計算</button>
+    <button id="exportBtn" onclick="exportData()">📥 匯出</button>
+    <button id="resetBtn" onclick="confirmReset()">✕ 清除所有資料</button>
+    <input type="file" id="fileInput" style="display: none;" accept=".html,.htm" onchange="importData(this)">
+</div>
+
+<script>
+const STORAGE_KEY = 'fuel_log_data';
+
+// 載入資料
+function loadData() {
+    try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    } catch (e) {
+return [];
+    }
+}
+
+// 儲存資料
+function saveData(data) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+// 計算與排序資料 (共用邏輯)
+function getSortedData() {
+    const data = loadData();
+    const carOrder = { 'R6': 0, 'GSXR': 1, 'F22': 2 };
+
+    // 1. 依車種分類
+    const grouped = {};
+    data.forEach(item => {
+        if (!grouped[item.car]) grouped[item.car] = [];
+        grouped[item.car].push(item);
+    });
+
+    // 2. 計算里程差 (依里程升序計算)
+    for (const car in grouped) {
+        grouped[car].sort((a, b) => Number(a.mileage) - Number(b.mileage));
+        for (let i = 0; i < grouped[car].length; i++) {
+            if (i === 0) {
+                grouped[car][i].diff = 0;
+            } else {
+                grouped[car][i].diff = Number(grouped[car][i].mileage) - Number(grouped[car][i-1].mileage);
+            }
+        }
+    }
+
+    // 3. 排序後顯示 (車種優先：R6>GSXR>F22，同車種里程：大->小)
+    let displayData = [];
+    for (const car in carOrder) {
+        if (grouped[car]) {
+            // 降序排列
+            const sortedCarData = [...grouped[car]].sort((a, b) => Number(b.mileage) - Number(a.mileage));
+            displayData = displayData.concat(sortedCarData);
+        }
+    }
+
+    return displayData;
+}
+
+// 渲染表格
+function renderTable() {
+    const displayData = getSortedData();
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = '';
+
+    if (displayData.length === 0) {
+        const row = document.createElement('tr');
+        row.className = 'empty-msg';
+        row.innerHTML = '<td colspan="8">尚未有任何記錄</td>';
+        tbody.appendChild(row);
+    } else {
+        displayData.forEach((item, index) => {
+            const efficiency = item.diff > 0 ? (item.diff / item.fuel).toFixed(1) : '—';
+            
+            let diffClass = 'diff-zero';
+            if (item.diff > 0) diffClass = 'diff-pos';
+            if (item.diff < 0) diffClass = 'diff-neg';
+            
+            const diffDisplay = item.diff === 0 ? '---' : (item.diff > 0 ? '+' + Number(item.diff).toLocaleString() : Number(item.diff).toLocaleString());
+            const fuelDisplay = item.fuel;
+            
+            // 顯示時間：僅顯示 年/月/日
+            const datePart = item.time.split(' ')[0];
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${datePart}</td>
+                <td><span class="car-badge car-${item.car}">${item.car}</span></td>
+                <td>${Number(item.mileage).toLocaleString()}</td>
+                <td class="${diffClass}">${diffDisplay}</td>
+                <td>${fuelDisplay}</td>
+                <td>${efficiency} km/L</td>
+                <td><button class="btn-del" onclick="deleteRow('${item.time.replace(/'/g, "\\'")}')">刪</button></td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+    document.getElementById('rowCount').textContent = `共 ${displayData.length} 筆記錄`;
+}
+
+function addRow() {
+    const carType = document.getElementById('carType').value;
+    const mileage = document.getElementById('mileage').value;
+    const fuel = document.getElementById('fuel').value;
+
+    if (!carType || !mileage || !fuel) {
+        alert('請填寫所有欄位！');
+        return;
+    }
+
+    const now = new Date();
+    // 儲存完整時間以利唯一識別，但顯示時只取日期
+    const timeStr = now.toLocaleString('zh-TW', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit'
+    });
+
+    const data = loadData();
+    data.push({ car: carType, mileage, fuel, time: timeStr, diff: 0 });
+    saveData(data);
+
+    document.getElementById('carType').value = '';
+    document.getElementById('mileage').value = '';
+    document.getElementById('fuel').value = '';
+    
+    renderTable();
+}
+
+function recalcDiff() {
+    renderTable();
+    alert('已重新計算所有里程差！');
+}
+
+function deleteRow(timeStr) {
+    if(confirm('確定要刪除此筆資料嗎？')) {
+        const data = loadData();
+        const index = data.findIndex(d => d.time === timeStr);
+        if (index !== -1) {
+            data.splice(index, 1);
+            saveData(data);
+        }
+renderTable();
+    }
+}
+
+function confirmReset() {
+    if(confirm('確定要清除所有資料嗎？此操作無法復原！')) {
+        localStorage.removeItem(STORAGE_KEY);
+        renderTable();
+    }
+}
+
+// 匯入功能
+function importData(input) {
+    if (!input.files.length) return;
+    const file = input.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        const content = e.target.result;
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(content, 'text/html');
+        
+        const rows = doc.querySelectorAll('tbody tr');
+        if (rows.length === 0) {
+            alert('找不到表格資料！');
+            return;
+        }
+
+        const currentData = loadData();
+        let importedCount = 0;
+        // 檢查重複：車種 + 里程 + 加油量 + 時間
+        const existingKeys = new Set(currentData.map(item => `${item.car}_${item.mileage}_${item.fuel}_${item.time}`));
+
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length >= 6) { // Columns: #, Time, Car, Mileage, Diff, Fuel
+                const time = cells[1].innerText.trim();
+                const car = cells[2].innerText.trim();
+                // 處理千分位符號
+                const mileage = parseInt(cells[3].innerText.replace(/,/g, ''));
+                const fuel = parseFloat(cells[5].innerText.trim());
+
+                if (car && !isNaN(mileage) && !isNaN(fuel)) {
+                    const key = `${car}_${mileage}_${fuel}_${time}`;
+                    if (!existingKeys.has(key)) {
+                        currentData.push({
+                            car: car,
+                            mileage: mileage.toString(),
+                            fuel: fuel.toString(),
+                            time: time,
+                            diff: 0
+                        });
+                        existingKeys.add(key);
+                        importedCount++;
+                    }
+                }
+            }
+        });
+
+        if (importedCount > 0) {
+            saveData(currentData);
+            renderTable();
+            alert(`成功匯入 ${importedCount} 筆資料！`);
+        } else {
+            alert('沒有新的資料可以匯入。');
+        }
+        input.value = '';
+    };
+
+    reader.readAsText(file);
+}
+
+// 匯出功能
+function exportData() {
+    const displayData = getSortedData();
+    
+    let tableContent = `
+        <style>
+            body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
+            table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+            th { background: #f8f9fa; font-weight: bold; }
+            .diff-pos { color: green; }
+        </style>
+        <h2>加油記錄匯出表 (fuel_log)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>時間</th>
+                    <th>車種</th>
+                    <th>里程 (km)</th>
+                    <th>里程差 (km)</th>
+                    <th>加油量 (L)</th>
+                    <th>每 L 里程</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    displayData.forEach((item, index) => {
+        const efficiency = item.diff > 0 ? (item.diff / item.fuel).toFixed(1) : '—';
+        const diffDisplay = item.diff === 0 ? '---' : (item.diff > 0 ? '+' + Number(item.diff).toLocaleString() : Number(item.diff).toLocaleString());
+        const datePart = item.time.split(' ')[0];
+
+        tableContent += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${datePart}</td>
+                    <td>${item.car}</td>
+                    <td>${Number(item.mileage).toLocaleString()}</td>
+                    <td class="diff-pos">${diffDisplay}</td>
+                    <td>${item.fuel}</td>
+                    <td>${efficiency}</td>
+                </tr>
+        `;
+    });
+    
+    tableContent += `
+            </tbody>
+        </table>
+        <p>共 ${displayData.length} 筆記錄</p>
+    `;
+
+const blob = new Blob([tableContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'fuel_log.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+window.onload = renderTable;
+</script>
+
+</body>
+</html>

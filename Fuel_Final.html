@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>加油記錄</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0a0e17;
+            color: #e0e0e0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        h1 {
+            text-align: center;
+            color: #00d4ff;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+        .input-section {
+            background: #1a1f2e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #2a3040;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+        .input-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .input-group {
+            flex: 1;
+            min-width: 120px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: #8899aa;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 10px 14px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-group input:focus,
+        .input-group select:focus {
+            border-color: #00d4ff;
+            box-shadow: 0 0 8px rgba(0, 212, 255, 0.2);
+        }
+        .input-group select option {
+            background: #0d1117;
+            color: #e0e0e0;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        #confirmBtn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #confirmBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+        }
+        .table-section {
+            background: #1a1f2e;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #2a3040;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            margin-bottom: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        thead th {
+            background: #0d1117;
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #00d4ff;
+            font-size: 0.9rem;
+            border-bottom: 2px solid #00d4ff33;
+        }
+        tbody tr {
+            border-bottom: 1px solid #2a3040;
+            transition: background 0.2s;
+        }
+        tbody tr:hover {
+            background: #162030;
+        }
+        tbody td {
+            padding: 10px 16px;
+            font-size: 0.95rem;
+        }
+        .car-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .car-F22 { background: #1a3a2a; color: #4ade80; border: 1px solid #4ade8044; }
+        .car-R6 { background: #3a1a1a; color: #f87171; border: 1px solid #f8717144; }
+        .car-GSXR { background: #2a2a3a; color: #a78bfa; border: 1px solid #a78bfa44; }
+        .diff-pos { color: #4ade80; font-weight: bold; }
+        .diff-zero { color: #8899aa; }
+.diff-neg { color: #f87171; font-weight: bold; }
+        .empty-msg {
+            text-align: center;
+            padding: 30px;
+            color: #555;
+            font-style: italic;
+        }
+        #rowCount {
+            text-align: right;
+            padding: 10px 16px;
+            font-size: 0.8rem;
+            color: #555;
+        }
+        .btn-del {
+            background: none;
+            border: 1px solid #30363d;
+            color: #888;
+            padding: 2px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .btn-del:hover {
+            color: #f87171;
+            border-color: #f87171;
+        }
+        .footer-section {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 15px 0;
+        }
+        #resetBtn, #recalcBtn {
+            padding: 10px 30px;
+            border: 1px solid;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #resetBtn {
+            background: #2a2020;
+            color: #f87171;
+            border-color: #4a2020;
+        }
+        #resetBtn:hover {
+            background: #3a2525;
+            border-color: #f87171;
+        }
+        #recalcBtn {
+            background: #1a2a3a;
+            color: #00d4ff;
+            border-color: #2a4a5a;
+        }
+        #recalcBtn:hover {
+            background: #2a3a4a;
+            border-color: #00d4ff;
+        }
+    </style>
+</head>
+<body>
+
+<h1>⛽ 加油記錄</h1>
+
+<div class="input-section">
+    <div class="input-row">
+        <div class="input-group">
+            <label>車種</label>
+            <select id="carType">
+                <option value="">請選擇</option>
+                <option value="F22">F22</option>
+                <option value="R6">R6</option>
+                <option value="GSXR">GSXR</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label>里程 (km)</label>
+            <input type="number" id="mileage" placeholder="例如: 12500">
+        </div>
+        <div class="input-group">
+            <label>加油量 (L)</label>
+            <input type="number" id="fuel" placeholder="例如: 15.5" step="0.1">
+        </div>
+        <div class="btn-group">
+            <button id="confirmBtn" onclick="addRow()">✓ 確認</button>
+        </div>
+    </div>
+</div>
+
+<div class="table-section">
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>時間</th>
+                <th>車種</th>
+                <th>里程 (km)</th>
+                <th>里程差 (km)</th>
+                <th>加油量 (L)</th>
+                <th>每 L 里程</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <!-- Data rows will be here -->
+        </tbody>
+    </table>
+    <div id="rowCount"></div>
+</div>
+
+<div class="footer-section">
+    <button id="recalcBtn" onclick="recalcDiff()">🔄 重新計算</button>
+    <button id="resetBtn" onclick="confirmReset()">✕ 清除所有資料</button>
+</div>
+
+<script>
+const STORAGE_KEY = 'fuel_log_data';
+
+// 載入資料
+function loadData() {
+    try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    } catch (e) {
+        return [];
+    }
+}
+
+// 儲存資料
+function saveData(data) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+// 重新計算里程差邏輯
+function recalcDiff() {
+    let data = loadData();
+    
+    // 1. 建立車種的映射與排序規則
+    const carOrder = { 'R6': 0, 'GSXR': 1, 'F22': 2 };
+    
+    // 2. 依照車種分類
+    const grouped = {};
+    data.forEach(item => {
+        if (!grouped[item.car]) grouped[item.car] = [];
+        grouped[item.car].push(item);
+    });
+
+    // 3. 針對每一車種，依里程由小到大排序並計算差值
+    for (const car in grouped) {
+        // 排序：里程升序 (小的在前)
+        grouped[car].sort((a, b) => Number(a.mileage) - Number(b.mileage));
+
+        // 計算差值
+        for (let i = 0; i < grouped[car].length; i++) {
+            const current = grouped[car][i];
+            if (i === 0) {
+current.diff = 0; // 最小里程車次，差值為 0
+            } else {
+                current.diff = Number(current.mileage) - Number(grouped[car][i-1].mileage);
+            }
+        }
+        
+        // 計算完後，將結果寫回 data (因為是引用，會同步更新)
+    }
+
+    // 4. 最後整體排序：車種 (R6 > GSXR > F22)，同車種里程 (降序)
+    data.sort((a, b) => {
+        const carDiff = carOrder[a.car] - carOrder[b.car];
+        if (carDiff !== 0) return carDiff;
+        return Number(b.mileage) - Number(a.mileage); // 高里程在上
+    });
+
+    saveData(data);
+    renderTable();
+    alert('已針對每一車種重新計算里程差！');
+}
+
+// 渲染表格
+function renderTable() {
+    let data = loadData();
+
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = '';
+
+    if (data.length === 0) {
+        const row = document.createElement('tr');
+        row.className = 'empty-msg';
+        row.innerHTML = '<td colspan="8">尚未有任何記錄</td>';
+        tbody.appendChild(row);
+    } else {
+        data.forEach((item, index) => {
+            // 每 L 里程：里程差 / 加油量
+            const efficiency = item.diff > 0 ? (item.diff / item.fuel).toFixed(1) : '—';
+            
+            let diffClass = 'diff-zero';
+            if (item.diff > 0) diffClass = 'diff-pos';
+            if (item.diff < 0) diffClass = 'diff-neg';
+            
+            // 里程差顯示
+            const diffDisplay = item.diff === 0 ? '---' : (item.diff > 0 ? '+' + Number(item.diff).toLocaleString() : Number(item.diff).toLocaleString());
+            
+            // 加油量不捨入，保留原值
+            const fuelDisplay = item.fuel;
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${item.time}</td>
+                <td><span class="car-badge car-${item.car}">${item.car}</span></td>
+                <td>${Number(item.mileage).toLocaleString()}</td>
+                <td class="${diffClass}">${diffDisplay}</td>
+                <td>${fuelDisplay}</td>
+                <td>${efficiency} km/L</td>
+                <td><button class="btn-del" onclick="deleteRow('${item.time.replace(/'/g, "\\'")}')">刪</button></td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+    document.getElementById('rowCount').textContent = `共 ${data.length} 筆記錄`;
+}
+
+function addRow() {
+    const carType = document.getElementById('carType').value;
+    const mileage = document.getElementById('mileage').value;
+    const fuel = document.getElementById('fuel').value;
+
+    if (!carType || !mileage || !fuel) {
+        alert('請填寫所有欄位！');
+        return;
+    }
+
+    const now = new Date();
+    const timeStr = now.toLocaleString('zh-TW', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+
+    // 存資料
+    const data = loadData();
+    data.push({ car: carType, mileage, fuel, time: timeStr, diff: 0 }); // 預設 diff 0
+    saveData(data);
+
+    // 清空輸入
+    document.getElementById('carType').value = '';
+    document.getElementById('mileage').value = '';
+    document.getElementById('fuel').value = '';
+    
+    // 刷新表格
+    renderTable();
+}
+
+// 刪除單筆
+function deleteRow(timeStr) {
+    if(confirm('確定要刪除此筆資料嗎？')) {
+        const data = loadData();
+        const index = data.findIndex(d => d.time === timeStr);
+        if (index !== -1) {
+            data.splice(index, 1);
+            saveData(data);
+        }
+        renderTable();
+    }
+}
+
+// 全部重置
+function confirmReset() {
+    if(confirm('確定要清除所有資料嗎？此操作無法復原！')) {
+        localStorage.removeItem(STORAGE_KEY);
+        renderTable();
+    }
+}
+
+// 頁面載入時渲染
+window.onload = renderTable;
+</script>
+
+</body>
+</html>
